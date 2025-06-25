@@ -1,5 +1,7 @@
 // File: src/utils/mailer.js
 const nodemailer = require('nodemailer');
+require('dotenv').config();
+
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -26,6 +28,12 @@ module.exports = async function sendEmail(to, subject, html) {
       html,
     });
     console.log(`✅ Email sent to ${to}`);
+    console.log("Trying to send email with config:", {
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  user: process.env.EMAIL_USER
+});
+
   } catch (error) {
     console.error(`❌ Failed to send email to ${to}:`, error.message);
   }

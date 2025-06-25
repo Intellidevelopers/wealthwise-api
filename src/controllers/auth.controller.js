@@ -11,40 +11,68 @@ const { generateToken } = require('../utils/token');
 exports.signup = async (req, res) => {
   try {
     const { firstName, lastName, email, phone, password, role } = req.body;
+
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(409).json({ message: 'User already exists' });
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ firstName, lastName, email, phone, password: hashedPassword, role });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    const token = generateToken(user._id, user.role);
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      phone,
+      password: hashedPassword,
+      role,
+      otp,
+      otpExpires
+    });
 
+    const welcomePath = path.join(__dirname, '../templates/welcome.html');
+    let welcomeHTML = fs.readFileSync(welcomePath, 'utf8');
+    welcomeHTML = welcomeHTML.replace('{{name}}', firstName);
+
+    const otpTemplatePath = path.join(__dirname, '../templates/otp.html');
+    let otpHTML = fs.readFileSync(otpTemplatePath, 'utf8');
+    otpHTML = otpHTML.replace('{{name}}', firstName).replace('{{otp}}', otp);
+
+    await sendEmail(email, 'Welcome to LMS', welcomeHTML);
+    await sendEmail(email, 'Your LMS OTP Code', otpHTML);
 
     res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        role: user.role
-      }
+      message: 'Signup successful. OTP sent to email for verification.',
+      userId: user._id
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    if (!user.isVerified) {
+      return res.status(403).json({ message: 'Email not verified' });
+    }
+
     const token = generateToken(user._id, user.role);
 
+    const loginPath = path.join(__dirname, '../templates/login-notify.html');
+    let loginHTML = fs.readFileSync(loginPath, 'utf8');
+    loginHTML = loginHTML.replace('{{name}}', user.firstName);
 
-    res.status(201).json({
+    await sendEmail(email, 'New Login Alert - LMS', loginHTML);
+
+    res.status(200).json({
       token,
       user: {
         id: user._id,
@@ -59,6 +87,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -190,4 +219,26 @@ exports.showResetForm = (req, res) => {
       </body>
     </html>
   `);
+};
+
+exports.verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (
+    !user ||
+    user.otp !== otp ||
+    !user.otpExpires ||
+    Date.now() > user.otpExpires
+  ) {
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+
+  user.otp = null;
+  user.otpExpires = null;
+  user.isVerified = true;
+  await user.save();
+
+  res.status(200).json({ message: 'OTP verified successfully' });
 };
