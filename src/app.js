@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./swagger'); // Adjust path if needed
+const swaggerSpec = require('../swagger'); // Adjust path if needed
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
