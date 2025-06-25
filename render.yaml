@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: wealthwise-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb+srv://wealthwise:V8UdwSyBIxi3rcZu@wealthcluster.drqri6v.mongodb.net/?retryWrites=true&w=majority&appName=wealthcluster
+      - key: JWT_SECRET
+        value: a12d14e26973d38d0286523f32cd404def6f4ad7e2b6660fa11ffcac97ecabb3
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 465
+      - key: EMAIL_USER
+        value: devteamjtech@gmail.com
+      - key: EMAIL_PASS
+        value: nllqkyxjbzfvfupv
+      - key: BASE_URL
+        value: http://localhost:5000
