@@ -1,16 +1,14 @@
-// File: src/models/user.model.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const mongoose = require('mongoose');
 
-const User = sequelize.define('User', {
-  firstName: DataTypes.STRING,
-  lastName: DataTypes.STRING,
-  email: { type: DataTypes.STRING, unique: true },
-  phone: DataTypes.STRING,
-  password: DataTypes.STRING,
-  role: { type: DataTypes.ENUM('student', 'instructor', 'admin'), defaultValue: 'student' },
-  resetToken: DataTypes.STRING,
-  resetTokenExpires: DataTypes.DATE
-});
+const userSchema = new mongoose.Schema({
+  firstName: String,
+  lastName: String,
+  email: { type: String, unique: true },
+  phone: String,
+  password: String,
+  role: { type: String, enum: ['student', 'instructor', 'admin'], default: 'student' },
+  resetToken: String,
+  resetTokenExpires: Date
+}, { timestamps: true });
 
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

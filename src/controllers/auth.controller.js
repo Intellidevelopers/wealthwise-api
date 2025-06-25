@@ -1,11 +1,11 @@
-// File: src/controllers/auth.controller.js
-const Op = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/user.model');
 const sendEmail = require('../utils/mailer');
-
+const fs = require('fs');
+const path = require('path');
+const { generateToken } = require('../utils/token');
 
 
 exports.signup = async (req, res) => {
@@ -13,19 +13,21 @@ exports.signup = async (req, res) => {
     const { firstName, lastName, email, phone, password, role } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ firstName, lastName, email, phone, password: hashedPassword, role });
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
-    res.status(201).json({
-  token,
-  user: {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    phone: user.phone,
-    role: user.role
-  }
-});
 
+    const token = generateToken(user._id, user.role);
+
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -34,22 +36,25 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
+
+    const token = generateToken(user._id, user.role);
+
+
     res.status(201).json({
-  token,
-  user: {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    phone: user.phone,
-    role: user.role
-  }
-});
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -57,19 +62,32 @@ exports.login = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
-  const user = await User.findOne({ where: { email } });
+  const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: 'User not found' });
 
   const resetToken = crypto.randomBytes(32).toString('hex');
-  const resetTokenExpires = Date.now() + 3600000; // 1 hour
+  const resetTokenExpires = Date.now() + 3600000;
   user.resetToken = resetToken;
   user.resetTokenExpires = resetTokenExpires;
   await user.save();
 
   const resetUrl = `${process.env.BASE_URL}/api/auth/reset-password?token=${resetToken}`;
-  await sendEmail(user.email, 'Password Reset', `Reset your password using this link: ${resetUrl}`);
+
+  // Read template file
+  const templatePath = path.join(__dirname, '../templates/reset-password.html');
+  let html = fs.readFileSync(templatePath, 'utf8');
+
+  // Inject values
+  html = html.replace('{{name}}', user.firstName);
+  html = html.replace('{{resetUrl}}', resetUrl);
+
+  await sendEmail(user.email, 'Reset Your LMS Password', html);
   res.json({ message: 'Password reset link sent' });
 };
+
+
+
+
 
 exports.resetPassword = async (req, res) => {
   const { token, password, confirmPassword } = req.body;
@@ -83,10 +101,8 @@ exports.resetPassword = async (req, res) => {
   }
 
   const user = await User.findOne({
-    where: {
-      resetToken: token,
-      resetTokenExpires: { [Op.gt]: Date.now() }
-    }
+    resetToken: token,
+    resetTokenExpires: { $gt: Date.now() }
   });
 
   if (!user) {
@@ -101,28 +117,21 @@ exports.resetPassword = async (req, res) => {
   res.json({ message: 'Password has been reset' });
 };
 
-
-
-
-
 exports.getProfile = async (req, res) => {
-  const user = await User.findByPk(req.user.id);
+  const user = await User.findById(req.user._id);
   res.json(user);
 };
 
 exports.updateProfile = async (req, res) => {
   const { firstName, lastName, phone } = req.body;
-  await User.update({ firstName, lastName, phone }, { where: { id: req.user.id } });
+  await User.findByIdAndUpdate(req.user._id, { firstName, lastName, phone });
   res.json({ message: 'Profile updated' });
 };
 
 exports.logout = async (req, res) => {
-  // Token is handled on client; optionally implement blacklist logic here
   res.json({ message: 'Logged out' });
 };
 
-// src/controllers/auth.controller.js
-// src/controllers/auth.controller.js
 exports.showResetForm = (req, res) => {
   const token = req.query.token;
 
@@ -182,4 +191,3 @@ exports.showResetForm = (req, res) => {
     </html>
   `);
 };
-
