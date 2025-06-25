@@ -3,8 +3,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const connectDB = require('../src/config/db'); // make sure this exports a connectDB() function
-const authRoutes = require('../src/routes/auth.routes');
+const connectDB = require('../config/db'); // make sure this exports a connectDB() function
+const authRoutes = require('../routes/auth.routes');
 
 const app = express();
 app.use(cors());
