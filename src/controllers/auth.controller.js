@@ -114,10 +114,6 @@ exports.forgotPassword = async (req, res) => {
   res.json({ message: 'Password reset link sent' });
 };
 
-
-
-
-
 exports.resetPassword = async (req, res) => {
   const { token, password, confirmPassword } = req.body;
 

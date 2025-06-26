@@ -1,14 +1,22 @@
-// const { DataTypes } = require('sequelize');
-// const sequelize = require('../config/db');
+const mongoose = require('mongoose');
 
-// const Course = sequelize.define('Course', {
-//   title: {
-//     type: DataTypes.STRING,
-//     allowNull: false,
-//   },
-//   description: DataTypes.TEXT,
-//   price: DataTypes.FLOAT,
-//   thumbnail: DataTypes.STRING
-// });
+const courseSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  duration: { type: String, required: true },
+  description: { type: String, required: true },
+  price: { type: Number, default: 0 },
+  thumbnail: { type: String, required: true },
+  video: { type: String, required: true },
+  instructor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+}, {
+  timestamps: true,
+});
 
-// module.exports = Course;
+// ✅ Avoid OverwriteModelError in development
+const Course = mongoose.models.Course || mongoose.model('Course', courseSchema);
+
+module.exports = Course;

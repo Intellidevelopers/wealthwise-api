@@ -23,7 +23,7 @@ coverage/
 dist/
 build/
 
-# Mac system files
+# Mac system files 
 .DS_Store
 
 # IDEs and editors
