@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../swagger'); // Adjust path if needed
+const notificationRoutes = require('./routes/notification.routes');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -13,7 +14,8 @@ app.use(cors());
 
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
-// app.use('/api/enrollments', require('./routes/enrollment.routes'));
+app.use('/api/categories', require('./routes/category.routes'));
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => res.send('Wealthwise LMS API is running ✅'));
 

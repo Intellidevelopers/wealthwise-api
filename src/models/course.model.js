@@ -10,13 +10,17 @@ const courseSchema = new mongoose.Schema({
   instructor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    required: true
   },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true
+  }
 }, {
-  timestamps: true,
+  timestamps: true
 });
 
-// ✅ Avoid OverwriteModelError in development
 const Course = mongoose.models.Course || mongoose.model('Course', courseSchema);
 
 module.exports = Course;

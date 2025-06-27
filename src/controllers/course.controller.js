@@ -10,7 +10,7 @@ exports.createCourse = async (req, res) => {
       return res.status(403).json({ message: 'Only instructors can create courses.' });
     }
 
-    const { title, duration, description, price, thumbnail, video } = req.body;
+    const { title, duration, description, price, thumbnail, video, category } = req.body;
 
     const course = new Course({
       title,
@@ -19,6 +19,7 @@ exports.createCourse = async (req, res) => {
       price,
       thumbnail,
       video,
+      category, // ✅ include this
       instructor: user._id
     });
 
@@ -28,6 +29,7 @@ exports.createCourse = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 // Get all courses (with instructor name)
