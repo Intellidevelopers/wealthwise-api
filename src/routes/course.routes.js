@@ -1,20 +1,30 @@
-// routes/course.routes.js
 const express = require('express');
 const router = express.Router();
 const courseController = require('../controllers/course.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 const upload = require('../middleware/cloudinaryUpload.middleware'); // ✅ renamed for clarity
 
+// CREATE course
 router.post(
   '/',
   authMiddleware,
-  upload.single('thumbnail'), // 🖼️ Upload thumbnail to Cloudinary
+  upload.single('thumbnail'),
   courseController.createCourse
 );
 
+// UPDATE course with image upload
+router.put(
+  '/:id',
+  authMiddleware,
+  upload.single('thumbnail'), // ✅ Handles image updates
+  courseController.updateCourse
+);
+
+// GET all & single course
 router.get('/', courseController.getCourses);
 router.get('/:id', courseController.getCourse);
-router.put('/:id', authMiddleware, courseController.updateCourse);
+
+// DELETE course
 router.delete('/:id', authMiddleware, courseController.deleteCourse);
 
 module.exports = router;

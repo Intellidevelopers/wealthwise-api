@@ -62,23 +62,31 @@ exports.getCourse = async (req, res) => {
 // Update a course
 exports.updateCourse = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Optional: restrict update to the instructor who created it
-    const course = await Course.findById(id);
+    const course = await Course.findById(req.params.id);
     if (!course) return res.status(404).json({ message: 'Course not found' });
 
-    // Optional: verify instructor owns the course
-    if (req.user.role !== 'admin' && !course.instructor.equals(req.user._id)) {
-      return res.status(403).json({ message: 'Access denied. Not your course.' });
+    const { title, description, price, duration, video, category } = req.body;
+
+    course.title = title;
+    course.description = description;
+    course.price = price;
+    course.duration = duration;
+    course.video = video;
+    course.category = category;
+
+    if (req.file) {
+      course.thumbnail = req.file.path; // ✅ From cloudinaryUpload.middleware
     }
 
-    const updated = await Course.findByIdAndUpdate(id, req.body, { new: true });
-    res.json(updated);
+    await course.save();
+
+    res.json({ message: 'Course updated', course });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Update error:', err);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 
 // Delete a course

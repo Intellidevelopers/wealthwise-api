@@ -5,7 +5,8 @@ const roleMiddleware = require('../middleware/role.middleware'); // ✅ Add this
 const {
   sendGlobalNotification,
   sendNotificationToAllStudents, // ✅ Correct function name
-  getUserNotifications
+  getUserNotifications,
+  getSentNotifications
 } = require('../controllers/notification.controller');
 
 // Admin sends notification to everyone
@@ -16,5 +17,8 @@ router.post('/students/global', authMiddleware, roleMiddleware('instructor'), se
 
 // Any user fetches their own notifications
 router.get('/', authMiddleware, getUserNotifications);
+
+// New route for instructor to fetch recent sent notifications
+router.get('/sent', authMiddleware, roleMiddleware('instructor'), getSentNotifications);
 
 module.exports = router;

@@ -68,3 +68,21 @@ exports.getUserNotifications = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+// Fetch recent notifications sent by instructor
+exports.getSentNotifications = async (req, res) => {
+  try {
+    if (req.user.role !== 'instructor') {
+      return res.status(403).json({ message: 'Instructors only.' });
+    }
+
+    const notifications = await Notification.find({ sender: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(10); // Fetch the 10 most recent
+
+    res.json(notifications);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
