@@ -1,7 +1,7 @@
 const Course = require('../models/course.model');
 
 // Create a new course
-// Create course (instructor only)
+// controllers/course.controller.js
 exports.createCourse = async (req, res) => {
   try {
     const user = req.user;
@@ -10,26 +10,31 @@ exports.createCourse = async (req, res) => {
       return res.status(403).json({ message: 'Only instructors can create courses.' });
     }
 
-    const { title, duration, description, price, thumbnail, video, category } = req.body;
+    const { title, duration, description, price, video, category } = req.body;
+
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: 'Thumbnail image is required.' });
+    }
 
     const course = new Course({
       title,
       duration,
       description,
       price,
-      thumbnail,
+      thumbnail: req.file.path, // ✅ Cloudinary URL
       video,
-      category, // ✅ include this
-      instructor: user._id
+      category,
+      instructor: user._id,
     });
 
     await course.save();
+
     res.status(201).json(course);
   } catch (err) {
+    console.error('Create Course Error:', err);
     res.status(500).json({ error: err.message });
   }
 };
-
 
 
 // Get all courses (with instructor name)
