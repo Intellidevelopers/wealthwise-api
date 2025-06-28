@@ -114,6 +114,7 @@ exports.forgotPassword = async (req, res) => {
   res.json({ message: 'Password reset link sent' });
 };
 
+
 exports.resetPassword = async (req, res) => {
   const { token, password, confirmPassword } = req.body;
 
@@ -142,20 +143,44 @@ exports.resetPassword = async (req, res) => {
   res.json({ message: 'Password has been reset' });
 };
 
+
 exports.getProfile = async (req, res) => {
   const user = await User.findById(req.user._id);
   res.json(user);
 };
 
+
+// Controller example
 exports.updateProfile = async (req, res) => {
-  const { firstName, lastName, phone } = req.body;
-  await User.findByIdAndUpdate(req.user._id, { firstName, lastName, phone });
-  res.json({ message: 'Profile updated' });
+  try {
+    const { firstName, lastName, phone, bio, specialization } = req.body;
+
+    const updates = {
+      firstName,
+      lastName,
+      phone,
+      bio,
+      specialization,
+    };
+
+    if (req.file?.path) {
+      updates.avatar = req.file.path; // e.g., Cloudinary URL
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
+
+    res.json({ message: 'Profile updated successfully', user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update profile', error: err.message });
+  }
 };
+
+
 
 exports.logout = async (req, res) => {
   res.json({ message: 'Logged out' });
 };
+
 
 exports.showResetForm = (req, res) => {
   const token = req.query.token;
@@ -216,6 +241,7 @@ exports.showResetForm = (req, res) => {
     </html>
   `);
 };
+
 
 exports.verifyOtp = async (req, res) => {
   const { email, otp } = req.body;

@@ -1,0 +1,104 @@
+const Conversation = require('../models/conversation.model');
+const Message = require('../models/message.model');
+const User = require('../models/user.model');
+
+exports.createOrGetConversation = async (req, res) => {
+  const { userId } = req.body;
+
+  // ❗ Validate
+  if (!userId) {
+    return res.status(400).json({ message: 'userId is required' });
+  }
+
+  if (userId === req.user._id.toString()) {
+    return res.status(400).json({ message: 'Cannot create conversation with yourself' });
+  }
+
+  let conversation = await Conversation.findOne({
+    participants: { $all: [req.user._id, userId] },
+  });
+
+  if (!conversation) {
+    conversation = await Conversation.create({
+      participants: [req.user._id, userId],
+    });
+  }
+
+  res.json(conversation);
+};
+
+
+exports.getUserConversations = async (req, res) => {
+  try {
+    const conversations = await Conversation.find({ participants: req.user._id })
+      .populate('participants', 'firstName lastName avatar')
+      .sort({ updatedAt: -1 });
+
+    const filtered = conversations.map((conv) => {
+      const participant = conv.participants.find(
+        (p) => p._id.toString() !== req.user._id.toString()
+      );
+
+      return {
+        _id: conv._id,
+        participant, // ✅ simplified for frontend
+        updatedAt: conv.updatedAt,
+      };
+    });
+
+    res.json(filtered);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch conversations' });
+  }
+};
+
+
+exports.getMessages = async (req, res) => {
+  const messages = await Message.find({ conversation: req.params.id })
+    .populate('sender', 'firstName lastName avatar')
+    .sort({ createdAt: 1 });
+
+  res.json(messages);
+};
+
+exports.sendMessage = async (req, res) => {
+  const { text } = req.body;
+  const conversationId = req.params.id;
+
+  if (!text) return res.status(400).json({ message: 'Message text is required' });
+
+  // 1. Find conversation
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+
+  // 2. Identify receiver (the other participant)
+  const receiverId = conversation.participants.find(
+    (id) => id.toString() !== req.user._id.toString()
+  );
+
+  // 3. Create message
+    const message = await Message.create({
+        conversation: conversationId,
+        sender: req.user._id,
+        receiver: receiverId,
+        text,
+    });
+
+
+  // 4. Update conversation last modified timestamp
+  await Conversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() });
+
+  // 5. Populate sender details
+  const populated = await Message.findById(message._id).populate(
+    'sender',
+    'firstName lastName avatar'
+  );
+
+  // 6. Return with `receiver`
+  res.status(201).json({
+    ...populated.toObject(),
+    receiver: receiverId,
+  });
+};
+
+
