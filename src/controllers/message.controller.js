@@ -60,45 +60,49 @@ exports.getMessages = async (req, res) => {
 
   res.json(messages);
 };
-
 exports.sendMessage = async (req, res) => {
-  const { text } = req.body;
-  const conversationId = req.params.id;
+  try {
+    const { text } = req.body;
+    const conversationId = req.params.id;
 
-  if (!text) return res.status(400).json({ message: 'Message text is required' });
+    if (!text) return res.status(400).json({ message: 'Message text is required' });
 
-  // 1. Find conversation
-  const conversation = await Conversation.findById(conversationId);
-  if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+    // 1. Find conversation
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
 
-  // 2. Identify receiver (the other participant)
-  const receiverId = conversation.participants.find(
-    (id) => id.toString() !== req.user._id.toString()
-  );
+    // 2. Identify receiver (the other participant)
+    const receiverId = conversation.participants.find(
+      (id) => id.toString() !== req.user._id.toString()
+    );
 
-  // 3. Create message
+    // 3. Create message
     const message = await Message.create({
-        conversation: conversationId,
-        sender: req.user._id,
-        receiver: receiverId,
-        text,
+      conversation: conversationId,
+      sender: req.user._id,
+      receiver: receiverId,
+      text,
     });
 
+    // 4. Update conversation
+    await Conversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() });
 
-  // 4. Update conversation last modified timestamp
-  await Conversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() });
+    // 5. Populate sender
+    const populated = await Message.findById(message._id).populate(
+      'sender',
+      'firstName lastName avatar'
+    );
 
-  // 5. Populate sender details
-  const populated = await Message.findById(message._id).populate(
-    'sender',
-    'firstName lastName avatar'
-  );
-
-  // 6. Return with `receiver`
-  res.status(201).json({
-    ...populated.toObject(),
-    receiver: receiverId,
-  });
+    // 6. Return
+    res.status(201).json({
+      ...populated.toObject(),
+      receiver: receiverId,
+    });
+  } catch (err) {
+    console.error('Send message error:', err); // ✅ log actual error
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
+
 
 
