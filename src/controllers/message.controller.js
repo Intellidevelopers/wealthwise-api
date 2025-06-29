@@ -65,11 +65,15 @@ exports.sendMessage = async (req, res) => {
     const { text } = req.body;
     const conversationId = req.params.id;
 
-    if (!text) return res.status(400).json({ message: 'Message text is required' });
+    if (!text) {
+      return res.status(400).json({ message: 'Message text is required' });
+    }
 
     // 1. Find conversation
     const conversation = await Conversation.findById(conversationId);
-    if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
 
     // 2. Identify receiver (the other participant)
     const receiverId = conversation.participants.find(
@@ -84,25 +88,22 @@ exports.sendMessage = async (req, res) => {
       text,
     });
 
-    // 4. Update conversation
+    // 4. Update conversation timestamp
     await Conversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() });
 
-    // 5. Populate sender
-    const populated = await Message.findById(message._id).populate(
-      'sender',
-      'firstName lastName avatar'
-    );
+    // 5. Populate both sender and receiver (important for frontend rendering)
+    const populated = await Message.findById(message._id)
+      .populate('sender', '_id firstName lastName avatar')
+      .populate('receiver', '_id firstName lastName avatar');
 
-    // 6. Return
-    res.status(201).json({
-      ...populated.toObject(),
-      receiver: receiverId,
-    });
+    // 6. Return the fully populated message
+    res.status(201).json(populated);
   } catch (err) {
-    console.error('Send message error:', err); // ✅ log actual error
+    console.error('Send message error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 
 
