@@ -43,3 +43,24 @@ exports.enrollInCourse = async (req, res) => {
     res.status(500).json({ error: 'Enrollment failed' });
   }
 };
+
+exports.checkEnrollmentStatus = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const studentId = req.user._id;
+
+    const enrollment = await Enrollment.findOne({
+      student: studentId,
+      course: courseId,
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({ message: 'Not enrolled in this course' });
+    }
+
+    res.status(200).json({ enrollment });
+  } catch (err) {
+    console.error('Check enrollment error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

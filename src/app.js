@@ -6,6 +6,8 @@ const swaggerSpec = require('../swagger'); // Adjust path if needed
 const notificationRoutes = require('./routes/notification.routes');
 const messageRoutes = require('./routes/message.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const enrollmentRoutes = require('./routes/enrollment.routes');
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -25,6 +27,8 @@ app.use('/api/messages', messageRoutes);
 // app.js or server.js
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/payment', paymentRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
+
 
 
 app.get('/', (req, res) => res.send('Wealthwise LMS API is running ✅'));
