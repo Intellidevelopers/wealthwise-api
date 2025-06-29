@@ -1,9 +1,6 @@
-const axios = require('axios');
-const { v4: uuidv4 } = require('uuid');
-
 exports.initiateFlutterwavePayment = async (req, res) => {
   try {
-    const { amount, email, firstName, lastName, courseId } = req.body;
+    const { amount, email, fullName, courseId, customizationTitle } = req.body; // ← added customizationTitle
 
     const tx_ref = `LMS-${uuidv4()}`;
 
@@ -14,11 +11,10 @@ exports.initiateFlutterwavePayment = async (req, res) => {
       redirect_url: process.env.FLW_REDIRECT_URL,
       customer: {
         email,
-        firstName: firstName,
-        lastName: lastName,
+        name: fullName,
       },
       customizations: {
-        title: 'LMS Course Payment',
+        title: customizationTitle || 'LMS Course Payment', // ← now dynamic
         description: 'Pay to enroll in this course',
       },
       meta: {
