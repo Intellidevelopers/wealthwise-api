@@ -1,3 +1,6 @@
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
+
 exports.initiateFlutterwavePayment = async (req, res) => {
   try {
     const { amount, email, fullName, courseId, customizationTitle } = req.body; // ← added customizationTitle
