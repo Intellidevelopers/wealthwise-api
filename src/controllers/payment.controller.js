@@ -1,6 +1,9 @@
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
+
 exports.initiateFlutterwavePayment = async (req, res) => {
   try {
-    const { amount, email, fullName, courseId, customizationTitle } = req.body; // ← added customizationTitle
+    const { amount, email, fullName, courseId } = req.body;
 
     const tx_ref = `LMS-${uuidv4()}`;
 
@@ -14,7 +17,7 @@ exports.initiateFlutterwavePayment = async (req, res) => {
         name: fullName,
       },
       customizations: {
-        title: customizationTitle || 'LMS Course Payment', // ← now dynamic
+        title: 'LMS Course Payment',
         description: 'Pay to enroll in this course',
       },
       meta: {
