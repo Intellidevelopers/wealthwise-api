@@ -58,8 +58,10 @@ socket.on('userConnected', (userId) => {
   // Message sending
   socket.on('sendMessage', ({ conversationId, message }) => {
     socket.to(conversationId).emit('receiveMessage', message);
+    // ✅ broadcast to refresh conversation list
+    io.emit('refreshConversations');
   });
-
+  
   // Disconnect
   socket.on('disconnect', () => {
     console.log('🔴 User disconnected:', socket.id);
