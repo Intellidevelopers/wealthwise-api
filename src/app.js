@@ -21,6 +21,9 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/instructor', require('./routes/instructor.routes'));
 app.use('/api/enrollments', require('./routes/enrollment.routes'));
 app.use('/api/messages', messageRoutes);
+// app.js or server.js
+app.use('/api/users', require('./routes/user.routes'));
+
 
 app.get('/', (req, res) => res.send('Wealthwise LMS API is running ✅'));
 
