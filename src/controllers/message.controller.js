@@ -87,8 +87,6 @@ exports.getUnreadCounts = async (req, res) => {
 };
 
 
-
-
 exports.sendMessage = async (req, res) => {
   try {
     const { text } = req.body;
@@ -98,15 +96,18 @@ exports.sendMessage = async (req, res) => {
       return res.status(400).json({ message: 'Message text is required' });
     }
 
+    // 1. Find conversation
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
       return res.status(404).json({ message: 'Conversation not found' });
     }
 
+    // 2. Identify receiver (the other participant)
     const receiverId = conversation.participants.find(
       (id) => id.toString() !== req.user._id.toString()
     );
 
+    // 3. Create message
     const message = await Message.create({
       conversation: conversationId,
       sender: req.user._id,
@@ -114,35 +115,21 @@ exports.sendMessage = async (req, res) => {
       text,
     });
 
+    // 4. Update conversation timestamp
     await Conversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() });
 
+    // 5. Populate both sender and receiver (important for frontend rendering)
     const populated = await Message.findById(message._id)
       .populate('sender', '_id firstName lastName avatar')
       .populate('receiver', '_id firstName lastName avatar');
 
-    // Emit new message to conversation room
-    const io = req.app.get('io');
-    io.to(conversationId).emit('receiveMessage', populated);
-
-    // ✅ Emit unread count to receiver
-    const unreadCount = await Message.countDocuments({
-      conversation: conversationId,
-      receiver: receiverId,
-      isRead: false,
-    });
-
-    io.to(receiverId.toString()).emit('unreadCountUpdate', {
-      conversationId,
-      count: unreadCount,
-    });
-
+    // 6. Return the fully populated message
     res.status(201).json(populated);
   } catch (err) {
     console.error('Send message error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 
 
 
