@@ -53,13 +53,42 @@ exports.getUserConversations = async (req, res) => {
 };
 
 
+// controllers/message.controller.js
 exports.getMessages = async (req, res) => {
   const messages = await Message.find({ conversation: req.params.id })
     .populate('sender', 'firstName lastName avatar')
     .sort({ createdAt: 1 });
 
+  // Mark messages as read (only the ones not sent by current user)
+  await Message.updateMany(
+    { conversation: req.params.id, receiver: req.user._id, isRead: false },
+    { $set: { isRead: true } }
+  );
+
   res.json(messages);
 };
+
+// Add to controllers/message.controller.js
+exports.getUnreadCounts = async (req, res) => {
+  const conversations = await Conversation.find({ participants: req.user._id });
+
+  const counts = await Promise.all(
+    conversations.map(async (conv) => {
+      const count = await Message.countDocuments({
+        conversation: conv._id,
+        receiver: req.user._id,
+        isRead: false,
+      });
+      return { conversationId: conv._id, count };
+    })
+  );
+
+  res.json(counts);
+};
+
+
+
+
 exports.sendMessage = async (req, res) => {
   try {
     const { text } = req.body;

@@ -7,5 +7,7 @@ router.post('/conversations', protect, messageController.createOrGetConversation
 router.get('/conversations', protect, messageController.getUserConversations);
 router.get('/conversations/:id/messages', protect, messageController.getMessages);
 router.post('/conversations/:id/messages', protect, messageController.sendMessage);
+router.get('/unread-counts', protect, messageController.getUnreadCounts);
+
 
 module.exports = router;
