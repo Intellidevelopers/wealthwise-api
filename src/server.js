@@ -30,13 +30,15 @@ io.on('connection', (socket) => {
   console.log('🟢 User connected:', socket.id);
 
   // Track which user connected
-  socket.on('userConnected', (userId) => {
-    if (userId) {
-      onlineUsers.set(userId, socket.id);
-      console.log(`✅ ${userId} is online`);
-      io.emit('onlineUsers', Array.from(onlineUsers.keys()));
-    }
-  });
+socket.on('userConnected', (userId) => {
+  if (userId) {
+    onlineUsers.set(userId, socket.id);
+    socket.join(userId); // 👈 for targeted emits like unreadCountUpdate
+    console.log(`✅ ${userId} is online`);
+    io.emit('onlineUsers', Array.from(onlineUsers.keys()));
+  }
+});
+
 
   // Join conversation room
   socket.on('join', (conversationId) => {
