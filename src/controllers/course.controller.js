@@ -4,26 +4,16 @@ const Course = require('../models/course.model');
 // controllers/course.controller.js
 exports.createCourse = async (req, res) => {
   try {
-    console.log('BODY:', req.body);
-    console.log('FILES:', req.files);
-
     const user = req.user;
 
     if (user.role !== 'instructor') {
       return res.status(403).json({ message: 'Only instructors can create courses.' });
     }
 
-    const { title, duration, description, price, category } = req.body;
+    const { title, duration, description, price, video, category } = req.body;
 
-    const thumbnailFile = req.files?.thumbnail?.[0];
-    const videoFile = req.files?.video?.[0];
-
-    if (!thumbnailFile || !thumbnailFile.path) {
+    if (!req.file || !req.file.path) {
       return res.status(400).json({ message: 'Thumbnail image is required.' });
-    }
-
-    if (!videoFile || !videoFile.path) {
-      return res.status(400).json({ message: 'Video file is required.' });
     }
 
     const course = new Course({
@@ -31,8 +21,8 @@ exports.createCourse = async (req, res) => {
       duration,
       description,
       price,
-      thumbnail: thumbnailFile.path,
-      video: videoFile.path,
+      thumbnail: req.file.path, // ✅ Cloudinary URL
+      video,
       category,
       instructor: user._id,
     });
@@ -45,8 +35,6 @@ exports.createCourse = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
 
 
 // Get all courses (with instructor name)
