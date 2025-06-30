@@ -2,17 +2,23 @@ const Quiz = require('../models/quize.model');
 const Submission = require('../models/submission.model');
 const Enrollment = require('../models/enrollment.model');
 
+// controllers/quiz.controller.js
 exports.createQuiz = async (req, res) => {
   try {
-    const { title, course, questions } = req.body;
-    const instructor = req.user._id;
+    const { course, questions } = req.body;
 
-    const quiz = await Quiz.create({ title, course, questions, instructor });
+    if (!course || !questions || !Array.isArray(questions)) {
+      return res.status(400).json({ message: 'Course and valid questions required.' });
+    }
+
+    const quiz = await Quiz.create({ course, questions });
     res.status(201).json({ message: 'Quiz created', quiz });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).json({ message: 'Failed to create quiz' });
   }
 };
+
 
 exports.getQuizByCourse = async (req, res) => {
   try {
