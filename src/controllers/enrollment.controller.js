@@ -64,3 +64,22 @@ exports.checkEnrollmentStatus = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.getEnrolledCourses = async (req, res) => {
+  try {
+    const studentId = req.user._id;
+
+    const enrollments = await Enrollment.find({ student: studentId, paid: true })
+      .populate({
+        path: 'course',
+        populate: { path: 'instructor', select: 'firstName lastName avatar' }, // optional
+      });
+
+    const courses = enrollments.map(enroll => enroll.course);
+
+    res.status(200).json({ courses });
+  } catch (error) {
+    console.error('Error fetching enrolled courses:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

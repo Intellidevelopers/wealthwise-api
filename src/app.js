@@ -9,6 +9,7 @@ const paymentRoutes = require('./routes/payment.routes');
 const enrollmentRoutes = require('./routes/enrollment.routes');
 
 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // <-- Mount Swagger
@@ -28,7 +29,6 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/payment', paymentRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
-
 
 
 app.get('/', (req, res) => res.send('Wealthwise LMS API is running ✅'));
