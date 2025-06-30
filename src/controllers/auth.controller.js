@@ -153,6 +153,9 @@ exports.getProfile = async (req, res) => {
 // Controller example
 exports.updateProfile = async (req, res) => {
   try {
+    console.log('req.file:', req.file); // 🕵️ This will show Cloudinary upload results
+    console.log('req.body:', req.body); // 🕵️ Check if all fields including names are there
+
     const { firstName, lastName, phone, bio, specialization } = req.body;
 
     const updates = {
@@ -164,13 +167,18 @@ exports.updateProfile = async (req, res) => {
     };
 
     if (req.file?.path) {
-      updates.avatar = req.file.path; // e.g., Cloudinary URL
+      updates.avatar = req.file.path;
+    } else {
+      console.warn('No file uploaded or file.path missing');
     }
 
-    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+    });
 
     res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (err) {
+    console.error('Update error:', err); // 💥 Backend error log
     res.status(500).json({ message: 'Failed to update profile', error: err.message });
   }
 };
