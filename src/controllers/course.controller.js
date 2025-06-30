@@ -4,6 +4,9 @@ const Course = require('../models/course.model');
 // controllers/course.controller.js
 exports.createCourse = async (req, res) => {
   try {
+    console.log('BODY:', req.body);
+    console.log('FILES:', req.files);
+
     const user = req.user;
 
     if (user.role !== 'instructor') {
@@ -28,7 +31,7 @@ exports.createCourse = async (req, res) => {
       duration,
       description,
       price,
-      thumbnail: thumbnailFile.path, // or upload to Cloudinary
+      thumbnail: thumbnailFile.path,
       video: videoFile.path,
       category,
       instructor: user._id,
@@ -42,6 +45,7 @@ exports.createCourse = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 
