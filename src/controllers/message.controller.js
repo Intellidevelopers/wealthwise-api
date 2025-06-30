@@ -131,6 +131,15 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+// controllers/message.controller.js
+exports.getRecentUnreadMessages = async (req, res) => {
+  const messages = await Message.find({
+    receiver: req.user._id,
+    isRead: false,
+  })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('sender', 'firstName lastName avatar');
 
-
-
+  res.json(messages);
+};
