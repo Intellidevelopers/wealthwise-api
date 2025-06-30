@@ -12,7 +12,9 @@ exports.signup = async (req, res) => {
   try {
     const { firstName, lastName, email, phone, password, role } = req.body;
 
-    const existing = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase();
+
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) return res.status(409).json({ message: 'User already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -22,7 +24,7 @@ exports.signup = async (req, res) => {
     const user = await User.create({
       firstName,
       lastName,
-      email,
+      email: normalizedEmail,
       phone,
       password: hashedPassword,
       role,
@@ -38,8 +40,8 @@ exports.signup = async (req, res) => {
     let otpHTML = fs.readFileSync(otpTemplatePath, 'utf8');
     otpHTML = otpHTML.replace('{{name}}', firstName).replace('{{otp}}', otp);
 
-    await sendEmail(email, 'Welcome to LMS', welcomeHTML);
-    await sendEmail(email, 'Your LMS OTP Code', otpHTML);
+    await sendEmail(normalizedEmail, 'Welcome to LMS', welcomeHTML);
+    await sendEmail(normalizedEmail, 'Your LMS OTP Code', otpHTML);
 
     res.status(201).json({
       message: 'Signup successful. OTP sent to email for verification.',
@@ -49,6 +51,7 @@ exports.signup = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 exports.login = async (req, res) => {
