@@ -5,12 +5,17 @@ const authMiddleware = require('../middleware/auth.middleware');
 const upload = require('../middleware/cloudinaryUpload.middleware'); // ✅ renamed for clarity
 
 // CREATE course
+// CREATE course
 router.post(
   '/',
   authMiddleware,
-  upload.single('thumbnail'),
+  upload.fields([
+    { name: 'thumbnail', maxCount: 1 },
+    { name: 'video', maxCount: 1 }
+  ]),
   courseController.createCourse
 );
+
 
 // UPDATE course with image upload
 router.put(

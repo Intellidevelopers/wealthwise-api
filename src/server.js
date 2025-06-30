@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 const connectDB = require('./config/db');
 const app = require('./app');
 const http = require('http');
@@ -9,38 +10,43 @@ const cors = require('cors');
 dotenv.config();
 connectDB();
 
-// Allow CORS for frontend dev
-app.use(cors());
-
 const server = http.createServer(app);
+
+// CORS setup (adjust `origin` in production)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
+
+// Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: '*', // Replace with your frontend URL in production
+    origin: '*', // ✅ Replace with your frontend URL in production
     methods: ['GET', 'POST'],
   },
 });
 
-const PORT = process.env.PORT || 5000;
+// ✅ Store Socket.IO reference globally
+app.set('io', io);
 
-// Store online users in memory
+// 🟢 Track online users
 const onlineUsers = new Map();
 
-// Socket.IO logic
 io.on('connection', (socket) => {
   console.log('🟢 User connected:', socket.id);
 
-  // Track which user connected
-socket.on('userConnected', (userId) => {
-  if (userId) {
-    onlineUsers.set(userId, socket.id);
-    socket.join(userId); // 👈 for targeted emits like unreadCountUpdate
-    console.log(`✅ ${userId} is online`);
-    io.emit('onlineUsers', Array.from(onlineUsers.keys()));
-  }
-});
+  // Track connected users
+  socket.on('userConnected', (userId) => {
+    if (userId) {
+      onlineUsers.set(userId, socket.id);
+      socket.join(userId); // for targeted emits
+      console.log(`✅ ${userId} is online`);
+      io.emit('onlineUsers', Array.from(onlineUsers.keys()));
+    }
+  });
 
-
-  // Join conversation room
+  // Join chat room
   socket.on('join', (conversationId) => {
     socket.join(conversationId);
     console.log(`👥 User joined room: ${conversationId}`);
@@ -55,14 +61,13 @@ socket.on('userConnected', (userId) => {
     socket.to(conversationId).emit('stopTyping', { userId });
   });
 
-  // Message sending
+  // Handle message
   socket.on('sendMessage', ({ conversationId, message }) => {
     socket.to(conversationId).emit('receiveMessage', message);
-    // ✅ broadcast to refresh conversation list
-    io.emit('refreshConversations');
+    io.emit('refreshConversations'); // 🔄 trigger refresh on all clients
   });
-  
-  // Disconnect
+
+  // On disconnect
   socket.on('disconnect', () => {
     console.log('🔴 User disconnected:', socket.id);
     for (const [userId, socketId] of onlineUsers.entries()) {
@@ -75,9 +80,18 @@ socket.on('userConnected', (userId) => {
   });
 });
 
-// Make `io` accessible in routes/controllers if needed
-app.set('io', io);
 
+// ✅ Serve frontend from Vite (React) build
+const frontendPath = path.join(__dirname, 'client', 'dist'); // Adjust if your dist path is different
+app.use(express.static(frontendPath));
+
+// ✅ React Router fallback: serve index.html for all unmatched routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// 🔥 Start server
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 );

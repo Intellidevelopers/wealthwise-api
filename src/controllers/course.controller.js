@@ -10,10 +10,17 @@ exports.createCourse = async (req, res) => {
       return res.status(403).json({ message: 'Only instructors can create courses.' });
     }
 
-    const { title, duration, description, price, video, category } = req.body;
+    const { title, duration, description, price, category } = req.body;
 
-    if (!req.file || !req.file.path) {
+    const thumbnailFile = req.files?.thumbnail?.[0];
+    const videoFile = req.files?.video?.[0];
+
+    if (!thumbnailFile || !thumbnailFile.path) {
       return res.status(400).json({ message: 'Thumbnail image is required.' });
+    }
+
+    if (!videoFile || !videoFile.path) {
+      return res.status(400).json({ message: 'Video file is required.' });
     }
 
     const course = new Course({
@@ -21,8 +28,8 @@ exports.createCourse = async (req, res) => {
       duration,
       description,
       price,
-      thumbnail: req.file.path, // ✅ Cloudinary URL
-      video,
+      thumbnail: thumbnailFile.path, // or upload to Cloudinary
+      video: videoFile.path,
       category,
       instructor: user._id,
     });
@@ -35,6 +42,7 @@ exports.createCourse = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 // Get all courses (with instructor name)
