@@ -7,6 +7,7 @@ const notificationRoutes = require('./routes/notification.routes');
 const messageRoutes = require('./routes/message.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const enrollmentRoutes = require('./routes/enrollment.routes');
+const quizRoutes = require('./routes/quize.routes');
 
 
 
@@ -29,6 +30,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/payment', paymentRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 
 app.get('/', (req, res) => res.send('Wealthwise LMS API is running ✅'));
