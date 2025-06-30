@@ -70,16 +70,15 @@ exports.getEnrolledCourses = async (req, res) => {
     const studentId = req.user._id;
 
     const enrollments = await Enrollment.find({ student: studentId, paid: true })
-      .populate({
-        path: 'course',
-        populate: { path: 'instructor', select: 'firstName lastName avatar' }, // optional
-      });
+      .populate('course');
 
-    const courses = enrollments.map(enroll => enroll.course);
+    const courses = enrollments
+      .map(e => e.course)
+      .filter(course => course); // Remove nulls
 
     res.status(200).json({ courses });
-  } catch (error) {
-    console.error('Error fetching enrolled courses:', error);
+  } catch (err) {
+    console.error('Get enrolled courses error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
