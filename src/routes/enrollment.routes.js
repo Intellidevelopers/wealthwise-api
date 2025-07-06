@@ -121,15 +121,15 @@ const {
   getEnrolledCourses
 } = require('../controllers/enrollment.controller');
 
-const protect = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware'); // ✅ FIXED
 
 // 📌 Enroll in a course (POST)
-router.post('/', protect, enrollInCourse);
+router.post('/', authenticate, enrollInCourse);
 
 // ✅ Put static route BEFORE the dynamic one
-router.get('/my-courses', protect, getEnrolledCourses);
+router.get('/my-courses', authenticate, getEnrolledCourses);
 
 // 📌 Dynamic route (must come last)
-router.get('/:courseId', protect, checkEnrollmentStatus);
+router.get('/:courseId', authenticate, checkEnrollmentStatus);
 
 module.exports = router;

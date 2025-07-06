@@ -31,11 +31,6 @@
  *           type: string
  */
 
-const express = require('express');
-const router = express.Router();
-const authController = require('../controllers/auth.controller');
-const protect = require('../middleware/auth.middleware');
-const upload = require('../middleware/cloudinaryUpload.middleware'); // or multer if using local storage
 
 
 /**
@@ -70,7 +65,6 @@ const upload = require('../middleware/cloudinaryUpload.middleware'); // or multe
  *       409:
  *         description: User already exists
  */
-router.post('/signup', authController.signup);
 
 /**
  * @swagger
@@ -105,7 +99,6 @@ router.post('/signup', authController.signup);
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', authController.login);
 
 /**
  * @swagger
@@ -123,7 +116,6 @@ router.post('/login', authController.login);
  *             schema:
  *               $ref: '#/components/schemas/User'
  */
-router.get('/profile', protect, authController.getProfile);
 
 /**
  * @swagger
@@ -157,7 +149,6 @@ router.get('/profile', protect, authController.getProfile);
  *       200:
  *         description: Profile updated
  */
-router.put('/profile', protect, upload.single('avatar'), authController.updateProfile);
 
 /**
  * @swagger
@@ -171,7 +162,6 @@ router.put('/profile', protect, upload.single('avatar'), authController.updatePr
  *       200:
  *         description: Logged out
  */
-router.post('/logout', protect, authController.logout);
 
 /**
  * @swagger
@@ -192,7 +182,6 @@ router.post('/logout', protect, authController.logout);
  *       200:
  *         description: Password reset email sent
  */
-router.post('/forgot-password', authController.forgotPassword);
 
 /**
  * @swagger
@@ -211,7 +200,6 @@ router.post('/forgot-password', authController.forgotPassword);
  *       200:
  *         description: HTML form for password reset
  */
-router.get('/reset-password', authController.showResetForm);
 
 /**
  * @swagger
@@ -237,7 +225,6 @@ router.get('/reset-password', authController.showResetForm);
  *       200:
  *         description: Password has been reset
  */
-router.post('/reset-password', authController.resetPassword);
 
 /**
  * @swagger
@@ -261,6 +248,25 @@ router.post('/reset-password', authController.resetPassword);
  *       200:
  *         description: OTP verified
  */
+
+
+
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/auth.controller');
+const { authenticate } = require('../middleware/auth.middleware'); // ✅ FIXED
+const upload = require('../middleware/cloudinaryUpload.middleware');
+
+// ...
+router.get('/profile', authenticate, authController.getProfile);
+router.put('/profile', authenticate, upload.single('avatar'), authController.updateProfile);
+router.post('/signup', authController.signup);
+router.post('/login', authController.login);
+router.post('/logout', authenticate, authController.logout);
+router.post('/forgot-password', authController.forgotPassword);
+router.get('/reset-password', authController.showResetForm);
+router.post('/reset-password', authController.resetPassword);
 router.post('/verify-otp', authController.verifyOtp);
 
+// ...
 module.exports = router;

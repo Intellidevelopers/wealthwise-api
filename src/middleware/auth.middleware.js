@@ -1,30 +1,39 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 
-module.exports = async (req, res, next) => {
-  const auth = req.headers.authorization;
+const authenticate = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  if (!auth || !auth.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized: Missing token' });
   }
 
   try {
-    const token = auth.split(' ')[1];
+    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    console.log('🔐 JWT Decoded:', decoded); // ✅ Add this
-    const user = await User.findById(decoded.id); // MongoDB method
-
+    const user = await User.findById(decoded.id).select('-password');
     if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
+      return res.status(401).json({ message: 'Unauthorized: Invalid user' });
     }
 
-    console.log('✅ Authenticated User ID:', user._id.toString()); // ✅ Add this
-
-    req.user = user;
+    req.user = user; // ✅ Attach full user to req
     next();
   } catch (err) {
-    console.error('❌ Auth Middleware Error:', err); // ✅ Add this
-    res.status(403).json({ message: 'Forbidden' });
+    console.error('❌ Authentication error:', err.message);
+    return res.status(403).json({ message: 'Forbidden: Invalid token' });
   }
+};
+
+// ✅ Middleware to restrict to admin role only
+const isAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied: Admins only' });
+  }
+  next();
+};
+
+module.exports = {
+  authenticate,
+  isAdmin
 };

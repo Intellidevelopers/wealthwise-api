@@ -198,16 +198,13 @@
 const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/message.controller');
-const protect = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware'); // ✅ FIXED
 
-router.post('/conversations', protect, messageController.createOrGetConversation);
-router.get('/conversations', protect, messageController.getUserConversations);
-router.get('/conversations/:id/messages', protect, messageController.getMessages);
-router.post('/conversations/:id/messages', protect, messageController.sendMessage);
-router.get('/unread-counts', protect, messageController.getUnreadCounts);
-router.get('/recent-unread', protect, messageController.getRecentUnreadMessages);
-
-
-
+router.post('/conversations', authenticate, messageController.createOrGetConversation);
+router.get('/conversations', authenticate, messageController.getUserConversations);
+router.get('/conversations/:id/messages', authenticate, messageController.getMessages);
+router.post('/conversations/:id/messages', authenticate, messageController.sendMessage);
+router.get('/unread-counts', authenticate, messageController.getUnreadCounts);
+router.get('/recent-unread', authenticate, messageController.getRecentUnreadMessages);
 
 module.exports = router;

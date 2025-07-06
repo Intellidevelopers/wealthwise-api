@@ -61,8 +61,9 @@
 const express = require('express');
 const router = express.Router();
 const { getUserById } = require('../controllers/user.controller');
-const protect = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware'); // ✅ FIXED
 
-router.get('/:id', protect, getUserById);
+router.get('/:id', authenticate, getUserById);
 
 module.exports = router;
+

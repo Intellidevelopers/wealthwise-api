@@ -121,25 +121,19 @@
 
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth.middleware');
-const roleMiddleware = require('../middleware/role.middleware'); // ✅ Add this
+
+const { authenticate } = require('../middleware/auth.middleware');
+const roleMiddleware = require('../middleware/role.middleware');
 const {
   sendGlobalNotification,
-  sendNotificationToAllStudents, // ✅ Correct function name
+  sendNotificationToAllStudents,
   getUserNotifications,
   getSentNotifications
 } = require('../controllers/notification.controller');
 
-// Admin sends notification to everyone
-router.post('/global', authMiddleware, roleMiddleware('admin'), sendGlobalNotification);
-
-// Instructor sends notification to all students
-router.post('/students/global', authMiddleware, roleMiddleware('instructor'), sendNotificationToAllStudents);
-
-// Any user fetches their own notifications
-router.get('/', authMiddleware, getUserNotifications);
-
-// New route for instructor to fetch recent sent notifications
-router.get('/sent', authMiddleware, roleMiddleware('instructor'), getSentNotifications);
+router.post('/global', authenticate, roleMiddleware('admin'), sendGlobalNotification);
+router.post('/students/global', authenticate, roleMiddleware('instructor'), sendNotificationToAllStudents);
+router.get('/', authenticate, getUserNotifications);
+router.get('/sent', authenticate, roleMiddleware('instructor'), getSentNotifications);
 
 module.exports = router;

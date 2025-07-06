@@ -193,22 +193,28 @@
 
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware'); // ✅ FIXED
 const roleMiddleware = require('../middleware/role.middleware');
-const { getInstructorStats, getInstructorActivities } = require('../controllers/instructor.controller');
-// src/routes/course.routes.js or instructor.routes.js
-const { getInstructorCourses } = require('../controllers/instructor.controller');
-const instructorController = require('../controllers/instructor.controller');
+const {
+  getInstructorStats,
+  getInstructorActivities,
+  getInstructorCourses,
+  getEnrolledStudents
+} = require('../controllers/instructor.controller');
 
 // Instructor dashboard stats
-router.get('/stats', authMiddleware, roleMiddleware('instructor'), getInstructorStats);
+router.get('/stats', authenticate, roleMiddleware('instructor'), getInstructorStats);
+
 // Instructor recent activities
-router.get('/activities', authMiddleware, roleMiddleware('instructor'), getInstructorActivities);
-router.get('/courses', authMiddleware, roleMiddleware('instructor'), getInstructorCourses);
-router.get('/enrolled-students', authMiddleware, roleMiddleware('instructor'), instructorController.getEnrolledStudents);
+router.get('/activities', authenticate, roleMiddleware('instructor'), getInstructorActivities);
 
+// Instructor courses
+router.get('/courses', authenticate, roleMiddleware('instructor'), getInstructorCourses);
 
+// Enrolled students in instructor's courses
+router.get('/enrolled-students', authenticate, roleMiddleware('instructor'), getEnrolledStudents);
 
 module.exports = router;
+
 
 

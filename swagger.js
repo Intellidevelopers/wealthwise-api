@@ -19,7 +19,7 @@ const options = {
     },
     servers: [
       {
-        url: 'https://wealthwise-api.onrender.com', // Change this in production
+        url: 'http://localhost:5000', // Change this in production
         description: 'Production Server'
       }
     ],

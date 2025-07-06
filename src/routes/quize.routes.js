@@ -181,7 +181,6 @@
 
 const express = require('express');
 const router = express.Router();
-const protect = require('../middleware/auth.middleware');
 
 const {
   createQuiz,
@@ -190,12 +189,14 @@ const {
   getStudentSubmissions
 } = require('../controllers/quize.controller');
 
+const { authenticate } = require('../middleware/auth.middleware'); // ✅ FIXED
+
 // Instructor routes
-router.post('/', protect, createQuiz); // Create quiz
+router.post('/', authenticate, createQuiz); // Create quiz
 
 // Student routes
-router.get('/course/:courseId', protect, getQuizByCourse); // Get quiz for enrolled course
-router.post('/:quizId/submit', protect, submitQuiz); // Submit quiz
-router.get('/submissions', protect, getStudentSubmissions); // Optional: get all submissions
+router.get('/course/:courseId', authenticate, getQuizByCourse); // Get quiz for enrolled course
+router.post('/:quizId/submit', authenticate, submitQuiz); // Submit quiz
+router.get('/submissions', authenticate, getStudentSubmissions); // Optional: get all submissions
 
 module.exports = router;
