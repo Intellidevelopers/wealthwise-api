@@ -189,8 +189,9 @@
 const express = require('express');
 const router = express.Router();
 const courseController = require('../controllers/course.controller');
-const { authenticate } = require('../middleware/auth.middleware'); // ✅ FIXED
+const { authenticate } = require('../middleware/auth.middleware');
 const upload = require('../middleware/cloudinaryUpload.middleware');
+
 
 // CREATE course
 router.post(
@@ -200,7 +201,7 @@ router.post(
   courseController.createCourse
 );
 
-// UPDATE course with image upload
+// UPDATE course
 router.put(
   '/:id',
   authenticate,
@@ -208,11 +209,13 @@ router.put(
   courseController.updateCourse
 );
 
-// GET all & single course
+// GET courses
 router.get('/', courseController.getCourses);
 router.get('/:id', courseController.getCourse);
 
 // DELETE course
 router.delete('/:id', authenticate, courseController.deleteCourse);
+
+
 
 module.exports = router;

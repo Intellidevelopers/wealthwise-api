@@ -1,3 +1,4 @@
+// models/Course.js
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema(
@@ -6,7 +7,7 @@ const courseSchema = new mongoose.Schema(
     duration: { type: String, required: true },
     description: { type: String, required: true },
     price: { type: Number, default: 0 },
-    thumbnail: { type: String, required: true }, // ✅ stores Cloudinary URL
+    thumbnail: { type: String, required: true },
     video: { type: String, required: true },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,11 +20,7 @@ const courseSchema = new mongoose.Schema(
       required: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Course = mongoose.models.Course || mongoose.model('Course', courseSchema);
-
-module.exports = Course;
+module.exports = mongoose.model('Course', courseSchema);
