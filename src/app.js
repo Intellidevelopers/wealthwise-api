@@ -10,6 +10,7 @@ const enrollmentRoutes = require('./routes/enrollment.routes');
 const quizRoutes = require('./routes/quize.routes');
 const adminRoutes = require('./routes/admin.routes');
 const lessonRoutes = require('./routes/lesson.routes');
+const callRoutes = require('./routes/call.routes');
 
 
 
@@ -39,6 +40,11 @@ app.use('/api/quizzes', quizRoutes);
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/lessons', lessonRoutes);
+
+app.use('/api/calls', callRoutes);
+
+
+
 
 
 

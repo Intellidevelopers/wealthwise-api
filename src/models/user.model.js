@@ -26,7 +26,11 @@ const userSchema = new mongoose.Schema({
   // 👇 Profile fields
   bio: { type: String, default: '' },
   specialization: { type: String, default: '' },
-  avatar: { type: String, default: '' }
+  avatar: { type: String, default: '' },
+  hasCompletedOnboarding: {
+    type: Boolean,
+    default: false,
+  },
 
 }, { timestamps: true });
 

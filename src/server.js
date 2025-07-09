@@ -12,7 +12,7 @@ connectDB();
 
 const server = http.createServer(app);
 
-// CORS setup (adjust `origin` in production)
+// CORS setup (adjust in production)
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -22,37 +22,34 @@ app.use(cors({
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: '*', // ✅ Replace with your frontend URL in production
+    origin: '*', // Replace with actual frontend domain
     methods: ['GET', 'POST'],
   },
 });
 
-// ✅ Store Socket.IO reference globally
 app.set('io', io);
 
-// 🟢 Track online users
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
-  console.log('🟢 User connected:', socket.id);
+  console.log('🟢 Socket connected:', socket.id);
 
-  // Track connected users
+  // User login/register to socket
   socket.on('userConnected', (userId) => {
     if (userId) {
       onlineUsers.set(userId, socket.id);
-      socket.join(userId); // for targeted emits
-      console.log(`✅ ${userId} is online`);
+      socket.join(userId);
+      console.log(`✅ ${userId} is now online`);
       io.emit('onlineUsers', Array.from(onlineUsers.keys()));
     }
   });
 
-  // Join chat room
+  // ======= 💬 Chat Events =======
   socket.on('join', (conversationId) => {
     socket.join(conversationId);
-    console.log(`👥 User joined room: ${conversationId}`);
+    console.log(`👥 Joined chat room: ${conversationId}`);
   });
 
-  // Typing indicator
   socket.on('typing', ({ conversationId, userId }) => {
     socket.to(conversationId).emit('typing', { userId });
   });
@@ -61,17 +58,46 @@ io.on('connection', (socket) => {
     socket.to(conversationId).emit('stopTyping', { userId });
   });
 
-  // Handle message
   socket.on('sendMessage', ({ conversationId, message }) => {
     socket.to(conversationId).emit('receiveMessage', message);
-    io.emit('refreshConversations'); // 🔄 trigger refresh on all clients
+    io.emit('refreshConversations');
   });
 
-  // On disconnect
+  // ======= 📞 Voice Call Events =======
+  socket.on('startCall', ({ from, to, signal }) => {
+    const recipientSocketId = onlineUsers.get(to);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('incomingCall', {
+        from,
+        signal,
+      });
+      console.log(`📞 Call from ${from} → ${to}`);
+    } else {
+      console.log(`⚠️ ${to} is not online`);
+    }
+  });
+
+  socket.on('answerCall', ({ to, signal }) => {
+    const callerSocketId = onlineUsers.get(to);
+    if (callerSocketId) {
+      io.to(callerSocketId).emit('callAccepted', { signal });
+      console.log(`✅ Call accepted by ${to}`);
+    }
+  });
+
+  socket.on('endCall', ({ to }) => {
+    const recipientSocketId = onlineUsers.get(to);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('callEnded');
+      console.log(`🔚 Call ended with ${to}`);
+    }
+  });
+
+  // ======= 🔌 Disconnection =======
   socket.on('disconnect', () => {
-    console.log('🔴 User disconnected:', socket.id);
-    for (const [userId, socketId] of onlineUsers.entries()) {
-      if (socketId === socket.id) {
+    console.log('🔴 Socket disconnected:', socket.id);
+    for (const [userId, sId] of onlineUsers.entries()) {
+      if (sId === socket.id) {
         onlineUsers.delete(userId);
         break;
       }
@@ -81,11 +107,10 @@ io.on('connection', (socket) => {
 });
 
 
-// ✅ Serve frontend from Vite (React) build
-const frontendPath = path.join(__dirname, 'client', 'dist'); // Adjust if your dist path is different
+// ✅ Serve Vite/React frontend
+const frontendPath = path.join(__dirname, 'client', 'dist');
 app.use(express.static(frontendPath));
 
-// ✅ React Router fallback: serve index.html for all unmatched routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
