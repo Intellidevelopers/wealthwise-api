@@ -199,7 +199,8 @@ const {
   getInstructorStats,
   getInstructorActivities,
   getInstructorCourses,
-  getEnrolledStudents
+  getEnrolledStudents,
+  deleteInstructorAccount
 } = require('../controllers/instructor.controller');
 
 // Instructor dashboard stats
@@ -213,6 +214,8 @@ router.get('/courses', authenticate, roleMiddleware('instructor'), getInstructor
 
 // Enrolled students in instructor's courses
 router.get('/enrolled-students', authenticate, roleMiddleware('instructor'), getEnrolledStudents);
+// DELETE /api/instructor/delete-account
+router.delete('/delete-account', authenticate, deleteInstructorAccount);
 
 module.exports = router;
 

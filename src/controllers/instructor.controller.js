@@ -113,3 +113,34 @@ exports.getEnrolledStudents = async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching enrolled students.' });
   }
 };
+
+// DELETE /api/instructor/delete-account
+exports.deleteInstructorAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (req.user.role !== 'instructor') {
+      return res.status(403).json({ message: 'Forbidden. Instructors only.' });
+    }
+
+    // 1️⃣ Delete courses created by this instructor
+    const courses = await Course.find({ instructor: userId });
+    const courseIds = courses.map(course => course._id);
+
+    await Course.deleteMany({ instructor: userId });
+
+    // 2️⃣ Delete enrollments associated with these courses
+    await Enrollment.deleteMany({ course: { $in: courseIds } });
+
+    // 3️⃣ Delete instructor activities
+    await Activity.deleteMany({ instructor: userId });
+
+    // 4️⃣ Delete the user account
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: 'Instructor account and all related data have been deleted.' });
+  } catch (err) {
+    console.error('Error deleting instructor account:', err);
+    res.status(500).json({ message: 'Server error while deleting account.' });
+  }
+};

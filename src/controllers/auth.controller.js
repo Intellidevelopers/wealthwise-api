@@ -103,7 +103,8 @@ exports.forgotPassword = async (req, res) => {
   user.resetTokenExpires = resetTokenExpires;
   await user.save();
 
-  const resetUrl = `${process.env.BASE_URL}/api/auth/reset-password?token=${resetToken}`;
+  const resetUrl = `https://wealthwise-instructor.vercel.app/reset-password?token=${resetToken}`;
+
 
   // Read template file
   const templatePath = path.join(__dirname, '../templates/reset-password.html');
@@ -233,7 +234,7 @@ exports.showResetForm = (req, res) => {
               return;
             }
 
-            fetch('/api/auth/reset-password', {
+            fetch('https://wealthwise-api.onrender.com/api/auth/reset-password', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ token, password, confirmPassword })
