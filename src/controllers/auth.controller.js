@@ -40,8 +40,8 @@ exports.signup = async (req, res) => {
     let otpHTML = fs.readFileSync(otpTemplatePath, 'utf8');
     otpHTML = otpHTML.replace('{{name}}', firstName).replace('{{otp}}', otp);
 
-    await sendEmail(normalizedEmail, 'Welcome to LMS', welcomeHTML);
-    await sendEmail(normalizedEmail, 'Your LMS OTP Code', otpHTML);
+    await sendEmail(normalizedEmail, 'Welcome to WealthWise', welcomeHTML);
+    await sendEmail(normalizedEmail, 'Your WealthWise OTP Code', otpHTML);
 
     res.status(201).json({
       message: 'Signup successful. OTP sent to email for verification.',
@@ -73,7 +73,7 @@ exports.login = async (req, res) => {
     let loginHTML = fs.readFileSync(loginPath, 'utf8');
     loginHTML = loginHTML.replace('{{name}}', user.firstName);
 
-    await sendEmail(email, 'New Login Alert - LMS', loginHTML);
+    await sendEmail(email, 'New Login Alert - WealthWise', loginHTML);
 
     res.status(200).json({
       token,
@@ -114,7 +114,7 @@ exports.forgotPassword = async (req, res) => {
   html = html.replace('{{name}}', user.firstName);
   html = html.replace('{{resetUrl}}', resetUrl);
 
-  await sendEmail(user.email, 'Reset Your LMS Password', html);
+  await sendEmail(user.email, 'Reset Your WealthWise Password', html);
   res.json({ message: 'Password reset link sent' });
 };
 
@@ -277,3 +277,29 @@ exports.verifyOtp = async (req, res) => {
   res.status(200).json({ message: 'OTP verified successfully' });
 };
 
+// @desc    Delete user account
+// @route   DELETE /api/auth/delete-account
+// @access  Private
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // (Optional) Send farewell email
+    const goodbyePath = path.join(__dirname, '../templates/goodbye.html');
+    if (fs.existsSync(goodbyePath)) {
+      let goodbyeHTML = fs.readFileSync(goodbyePath, 'utf8');
+      goodbyeHTML = goodbyeHTML.replace('{{name}}', user.firstName);
+      await sendEmail(user.email, 'Account Deleted - WealthWise', goodbyeHTML);
+    }
+
+    res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ message: 'Failed to delete account', error: err.message });
+  }
+};

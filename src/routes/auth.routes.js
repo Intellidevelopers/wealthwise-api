@@ -267,6 +267,7 @@ router.post('/forgot-password', authController.forgotPassword);
 router.get('/reset-password', authController.showResetForm);
 router.post('/reset-password', authController.resetPassword);
 router.post('/verify-otp', authController.verifyOtp);
+router.delete('/delete-account', authenticate, authController.deleteAccount);
 
 // ...
 module.exports = router;

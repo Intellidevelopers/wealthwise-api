@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 module.exports = async function sendEmail(to, subject, html) {
   try {
     await transporter.sendMail({
-      from: `LMS <${process.env.EMAIL_USER}>`,
+      from: `WealthWise <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
